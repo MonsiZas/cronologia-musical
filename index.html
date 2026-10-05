@@ -8,11 +8,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=DM+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: una columna vertical como la tira de una gramola; la canción en juego arriba, la línea del tiempo debajo con huecos para colocar */
+/* Layout: barra superior compacta con la canción misteriosa; debajo, la línea del tiempo en horizontal que se reparte en filas y se compacta según crece, para caber en una pantalla */
 :root{
   --bg:#eef1f6; --surface:#ffffff; --ink:#151a2e; --muted:#5b6380; --line:#cfd5e4;
   --accent:#2f4fd8; --accent-ink:#ffffff; --good:#1d8a5a; --bad:#c8323c; --groove:#e3e7f1;
   --display:"Archivo",system-ui,sans-serif; --body:"Archivo",system-ui,sans-serif; --mono:"DM Mono",ui-monospace,monospace;
+  --card-w:136px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f1322; --surface:#181d33; --ink:#e8ebf7; --muted:#9aa3c4; --line:#2c3352;
@@ -21,61 +22,74 @@
   --bg:#0f1322; --surface:#181d33; --ink:#e8ebf7; --muted:#9aa3c4; --line:#2c3352;
   --accent:#7d95ff; --accent-ink:#0f1322; --good:#4cc58d; --bad:#ff6b73; --groove:#1d2340; color-scheme:dark}
 html,body{background:var(--bg);color:var(--ink)}
-body{font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:20px 48px}
-.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
-header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
-h1{font-family:var(--display);font-weight:900;font-stretch:118%;font-size:clamp(28px,7vw,40px);line-height:.95;margin:0;letter-spacing:-.01em;text-wrap:balance}
-h1 span{color:var(--accent)}
+body{font-family:var(--body);font-size:15px;line-height:1.4;padding-inline:16px;padding-block:14px 24px;margin:0}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.top{display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+@media (max-width:720px){.top{grid-template-columns:1fr auto}.top .now,.top .over{grid-column:1/-1;grid-row:2}.rules,.now-hint{display:none}}
+h1{font-family:var(--display);font-weight:900;font-stretch:118%;font-size:clamp(22px,4vw,30px);line-height:.95;margin:0;letter-spacing:-.01em}
+h1 span{color:var(--accent);display:block}
 .scores{display:flex;gap:16px}
 .score{display:flex;flex-direction:column;align-items:flex-end}
-.score b{font-family:var(--mono);font-size:28px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1}
+.score b{font-family:var(--mono);font-size:26px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1}
 .score small{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
-.rules{margin:0;color:var(--muted);font-size:14px}
+.rules{margin:0;color:var(--muted);font-size:13px}
 
-.now{background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:16px 18px;display:flex;gap:16px;align-items:center}
-.disc{flex:none;width:58px;height:58px;border-radius:50%;background:
-  radial-gradient(circle,var(--accent-ink) 0 5px,var(--accent) 5px 11px,transparent 11px),
+.now{background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:10px 16px;display:flex;gap:14px;align-items:center;min-width:0}
+.disc{flex:none;width:52px;height:52px;border-radius:50%;background:
+  radial-gradient(circle,var(--accent-ink) 0 5px,var(--accent) 5px 10px,transparent 10px),
   repeating-radial-gradient(circle,rgba(0,0,0,.55) 0 1px,rgba(0,0,0,.75) 1px 3px);
   animation:spin 3s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.disc{animation:none}}
 .now-text{min-width:0;display:flex;flex-direction:column;gap:2px}
-.now-label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;opacity:.8}
-.now-title{font-family:var(--display);font-weight:800;font-stretch:105%;font-size:22px;line-height:1.1}
-.now-artist{opacity:.9}
+.now-label{font-family:var(--display);font-weight:800;font-stretch:105%;font-size:18px;line-height:1.1}
+.now-hint{font-size:13px;opacity:.85}
 .listen{color:inherit;font-size:13px;opacity:.85;text-underline-offset:3px;width:fit-content}
+.last{font-size:13px;opacity:.9;min-height:1.4em}
 
-.timeline{display:flex;flex-direction:column;gap:0}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center}
-.card .yr{font-family:var(--mono);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--accent)}
-.card .t{font-weight:700;line-height:1.2}
-.card .a{color:var(--muted);font-size:14px}
-.card > div{min-width:0}
-.card.new{animation:pop .45s ease-out}
+.timeline{display:flex;flex-wrap:wrap;align-items:stretch;row-gap:10px}
+.edge{align-self:center;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);padding:0 6px}
+.card{width:var(--card-w);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.card .yr{font-family:var(--mono);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--accent);line-height:1.1}
+.card .t{font-weight:700;line-height:1.2;font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .a,.card .g{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .g{font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.card.new{animation:pop .5s ease-out}
 .card.wrong{border-color:var(--bad);border-width:2px}
 .card.wrong .yr{color:var(--bad)}
 .card.ghost{border-style:dashed;border-color:var(--good);border-width:2px}
 .card.ghost .yr{color:var(--good)}
-@keyframes pop{from{transform:scale(.96);background:var(--groove)}to{transform:none}}
+@keyframes pop{from{transform:scale(.92);background:var(--groove)}to{transform:none}}
 @media (prefers-reduced-motion:reduce){.card.new{animation:none}}
+.timeline.compact{--card-w:112px}
+.timeline.compact .card{padding:6px 8px}
+.timeline.compact .card .yr{font-size:17px}
+.timeline.compact .card .t{font-size:13px}
+.timeline.compact .card .g{display:none}
+.timeline.mini{--card-w:92px}
+.timeline.mini .card{padding:5px 7px}
+.timeline.mini .card .yr{font-size:15px}
+.timeline.mini .card .t{font-size:12px;-webkit-line-clamp:1}
+.timeline.mini .card .a,.timeline.mini .card .g{display:none}
 
-.slot{appearance:none;border:0;background:transparent;width:100%;padding:6px 0;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--muted);font:inherit;font-size:13px}
-.slot::before,.slot::after{content:"";flex:1;height:2px;background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 10px)}
-.slot span{padding:4px 12px;border:1.5px solid var(--line);border-radius:999px;background:var(--bg);white-space:nowrap}
-.slot:hover span,.slot:focus-visible span{border-color:var(--accent);color:var(--accent)}
+.slot{appearance:none;border:0;background:transparent;width:30px;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font:inherit;position:relative}
+.slot::before{content:"";position:absolute;top:6px;bottom:6px;width:2px;background:repeating-linear-gradient(180deg,var(--line) 0 5px,transparent 5px 9px)}
+.slot span{position:relative;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);background:var(--bg);display:grid;place-items:center;font-weight:700;font-size:16px;line-height:1}
+.slot:hover span,.slot:focus-visible span{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.slot:hover::before,.slot:focus-visible::before{background:var(--accent)}
 .slot:focus-visible{outline:none}
-.slot:hover::before,.slot:hover::after,.slot:focus-visible::before,.slot:focus-visible::after{background:var(--accent)}
-.slot[disabled]{cursor:default}
-.slot[disabled] span{visibility:hidden}
-.edge{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);text-align:center;padding:4px 0}
+.timeline.mini .slot{width:24px}
+.timeline.mini .slot span{width:20px;height:20px;font-size:14px}
+.timeline.done .slot{width:8px}
 
-.over{background:var(--surface);border:2px solid var(--bad);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px}
-.over h2{margin:0;font-family:var(--display);font-weight:900;font-stretch:112%;font-size:24px;color:var(--bad)}
-.over p{margin:0}
-.btn{appearance:none;border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;padding:12px 18px;border-radius:10px;cursor:pointer;width:fit-content}
+.over{background:var(--surface);border:2px solid var(--bad);border-radius:14px;padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;min-width:0}
+.over h2{margin:0;font-family:var(--display);font-weight:900;font-stretch:112%;font-size:20px;color:var(--bad)}
+.over p{margin:0;flex:1 1 260px;min-width:0}
+.btn{appearance:none;border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;padding:10px 16px;border-radius:10px;cursor:pointer;width:fit-content}
 .btn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .win{color:var(--good);font-weight:700}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 .play{appearance:none;border:1.5px solid currentColor;background:transparent;color:inherit;font:inherit;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;cursor:pointer;width:fit-content;margin-top:6px;display:inline-flex;align-items:center;gap:8px}
 .play:focus-visible{outline:3px solid var(--accent-ink);outline-offset:2px}
 .play[disabled]{opacity:.6;cursor:default}
@@ -87,32 +101,30 @@ h1 span{color:var(--accent)}
 <body>
 
 <div class="wrap">
-  <header>
-    <h1>Cronología<br><span>Musical</span></h1>
+  <div class="top">
+    <h1>Cronología <span>Musical</span></h1>
+    <section class="now" id="now" aria-live="polite">
+      <div class="disc" aria-hidden="true"></div>
+      <div class="now-text">
+        <span class="now-label">¿Qué canción es y de qué año?</span>
+        <span class="now-hint">Escúchala y pulsa + en el hueco donde creas que va.</span>
+        <button class="play" id="play" type="button">▶ Escuchar fragmento</button>
+        <a class="listen" id="nowListen" href="#" target="_blank" rel="noopener" hidden>No hay fragmento disponible. Escuchar en YouTube ↗</a>
+        <span class="last" id="last"></span>
+        <audio id="audio" preload="auto"></audio>
+      </div>
+    </section>
+    <section class="over" id="over" hidden>
+      <h2>Fin de la partida</h2>
+      <p id="overText"></p>
+      <button class="btn" id="again" type="button">Jugar otra vez</button>
+    </section>
     <div class="scores">
       <div class="score"><b id="streak">0</b><small>Racha</small></div>
       <div class="score"><b id="best">0</b><small>Récord</small></div>
     </div>
-  </header>
-  <p class="rules">Coloca cada canción en su sitio de la línea del tiempo según su año de lanzamiento. Un solo fallo y se acaba la partida. Si dos canciones son del mismo año, vale cualquier orden entre ellas.</p>
-
-  <section class="now" id="now" aria-live="polite">
-    <div class="disc" aria-hidden="true"></div>
-    <div class="now-text">
-      <span class="now-label">Canción en juego</span>
-      <span class="now-title" id="nowTitle"></span>
-      <span class="now-artist" id="nowArtist"></span>
-      <button class="play" id="play" type="button">▶ Escuchar fragmento</button>
-      <a class="listen" id="nowListen" href="#" target="_blank" rel="noopener" hidden>No hay fragmento disponible. Escuchar en YouTube ↗</a>
-      <audio id="audio" preload="auto"></audio>
-    </div>
-  </section>
-
-  <section class="over" id="over" hidden>
-    <h2>Fin de la partida</h2>
-    <p id="overText"></p>
-    <button class="btn" id="again" type="button">Jugar otra vez</button>
-  </section>
+  </div>
+  <p class="rules">Ordena las canciones por año de lanzamiento, de la más antigua a la más reciente. Un solo fallo y se acaba la partida. Si dos canciones son del mismo año, vale cualquier orden entre ellas.</p>
 
   <div class="timeline" id="timeline" aria-label="Línea del tiempo"></div>
 </div>
@@ -197,7 +209,7 @@ function ytLink(s){ return "https://www.youtube.com/results?search_query="+encod
 function start(){
   deck = shuffle(SONGS.slice());
   placed = [deck.pop()];
-  streak = 0; over = false;
+  streak = 0; over = false; $("last").textContent = "";
   $("over").hidden = true; $("now").hidden = false;
   next();
 }
@@ -258,8 +270,6 @@ audio.addEventListener("ended", ()=>{ $("now").classList.remove("playing"); play
 function next(){
   if(!deck.length){ finish(null, true); return }
   current = deck.pop();
-  $("nowTitle").textContent = current.title;
-  $("nowArtist").textContent = current.artist+" · "+current.genre;
   $("nowListen").href = ytLink(current);
   $("nowListen").hidden = true; playBtn.hidden = false; stopAudio();
   if(wantsAudio) playCurrent(); else findPreview(current);
@@ -274,6 +284,7 @@ function place(i){
   if(over) return;
   if(fits(i)){
     placed.splice(i,0,current); streak++;
+    $("last").textContent = `✓ Correcto: «${current.title}», ${current.artist} (${current.year})`;
     if(streak>best){ best=streak; store.set(best) }
     render(i);
     next();
@@ -285,9 +296,11 @@ function place(i){
 function card(s, cls){
   const el = document.createElement("div");
   el.className = "card"+(cls?" "+cls:"");
-  el.innerHTML = `<span class="yr">${s.year}</span><div><div class="t"></div><div class="a"></div></div>`;
+  el.innerHTML = `<span class="yr">${s.year}</span><span class="t"></span><span class="a"></span><span class="g"></span>`;
   el.querySelector(".t").textContent = s.title;
-  el.querySelector(".a").textContent = s.artist+" · "+s.genre;
+  el.querySelector(".a").textContent = s.artist;
+  el.querySelector(".g").textContent = s.genre;
+  el.title = `${s.title} · ${s.artist} · ${s.genre} · ${s.year}`;
   return el;
 }
 function slot(i){
@@ -296,22 +309,33 @@ function slot(i){
   const prev = placed[i-1], nxt = placed[i];
   const label = !prev ? "Antes de "+nxt.year : !nxt ? "Después de "+prev.year : "Entre "+prev.year+" y "+nxt.year;
   b.setAttribute("aria-label","Colocar aquí: "+label);
-  b.innerHTML = "<span>Aquí</span>";
+  b.innerHTML = "<span>+</span>"; b.title = "Colocar aquí: "+label;
   b.addEventListener("click",()=>place(i));
   return b;
 }
 function render(newIdx, fail){
   const tl = $("timeline"); tl.replaceChildren();
+  tl.classList.toggle("done", !!fail || over);
   $("streak").textContent = streak; $("best").textContent = best;
-  const top = document.createElement("div"); top.className="edge"; top.textContent="Más antigua"; tl.append(top);
+  const top = document.createElement("div"); top.className="edge"; top.textContent="Antigua"; tl.append(top);
   for(let i=0;i<=placed.length;i++){
     if(fail && fail.wrongAt===i){ tl.append(card(current,"wrong")) }
     if(fail && fail.rightAt===i && fail.rightAt!==fail.wrongAt){ tl.append(card(current,"ghost")) }
-    if(!fail) tl.append(slot(i));
+    if(!fail && !over) tl.append(slot(i));
     if(i<placed.length) tl.append(card(placed[i], i===newIdx?"new":""));
   }
-  const bot = document.createElement("div"); bot.className="edge"; bot.textContent="Más reciente"; tl.append(bot);
+  const bot = document.createElement("div"); bot.className="edge"; bot.textContent="Reciente"; tl.append(bot);
+  fitTimeline();
 }
+// Compacta las tarjetas solo cuando la línea del tiempo ya no cabe en la pantalla
+function fitTimeline(){
+  const tl = $("timeline"), root = document.documentElement;
+  for(const level of ["", "compact", "mini"]){
+    tl.classList.remove("compact","mini"); if(level) tl.classList.add(level);
+    if(root.scrollHeight <= innerHeight) break;
+  }
+}
+addEventListener("resize", fitTimeline);
 function finish(fail, won){
   stopAudio();
   over = true; $("now").hidden = true; $("over").hidden = false;

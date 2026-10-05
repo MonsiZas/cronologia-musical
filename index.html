@@ -216,7 +216,7 @@ function start(){
 // --- Audio: fragmentos de 30 s de Deezer (JSONP), con iTunes como respaldo ---
 const audio = $("audio"), playBtn = $("play");
 const previewCache = new Map();
-let wantsAudio = false, playToken = 0;
+let playToken = 0;
 function jsonp(url){
   return new Promise((resolve,reject)=>{
     const cb = "dz_"+Math.random().toString(36).slice(2);
@@ -262,8 +262,8 @@ async function playCurrent(){
   catch(e){ playBtn.textContent = "▶ Escuchar fragmento" }
 }
 playBtn.addEventListener("click", ()=>{
-  if(!audio.paused){ wantsAudio = false; stopAudio(); return }
-  wantsAudio = true; playCurrent();
+  if(!audio.paused){ stopAudio(); return }
+  playCurrent();
 });
 audio.addEventListener("ended", ()=>{ $("now").classList.remove("playing"); playBtn.textContent = "▶ Escuchar otra vez" });
 
@@ -272,7 +272,7 @@ function next(){
   current = deck.pop();
   $("nowListen").href = ytLink(current);
   $("nowListen").hidden = true; playBtn.hidden = false; stopAudio();
-  if(wantsAudio) playCurrent(); else findPreview(current);
+  findPreview(current);
   if(deck.length) findPreview(deck[deck.length-1]);
   render();
 }

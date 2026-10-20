@@ -23,6 +23,14 @@ else {
   try { songs = vm.runInNewContext(block); } catch (e) { errors.push("La lista SONGS no se puede leer: " + e.message); }
 }
 
+const groupsSrc = script?.match(/const GENRE_GROUPS = (\{[\s\S]*?\});/)?.[1];
+let groupedGenres = null;
+if (!groupsSrc) errors.push("No se encuentra GENRE_GROUPS.");
+else {
+  try { groupedGenres = new Set(Object.values(vm.runInNewContext("(" + groupsSrc + ")")).flat()); }
+  catch (e) { errors.push("GENRE_GROUPS no se puede leer: " + e.message); }
+}
+
 const maxYear = new Date().getFullYear();
 const seen = new Map();
 const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -34,6 +42,7 @@ songs.forEach((s, i) => {
   if (typeof artist !== "string" || !artist.trim()) errors.push(`${where}: falta el artista.`);
   if (!Number.isInteger(year) || year < 1950 || year > maxYear) errors.push(`${where}: año no válido.`);
   if (typeof genre !== "string" || !genre.trim()) errors.push(`${where}: falta el género.`);
+  else if (groupedGenres && !groupedGenres.has(genre)) errors.push(`${where}: el género "${genre}" no está en ninguna familia de GENRE_GROUPS.`);
   const key = norm(title) + "|" + norm(artist);
   if (seen.has(key)) errors.push(`${where}: duplicada (ya está en la #${seen.get(key)}).`);
   else seen.set(key, i + 1);

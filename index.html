@@ -90,6 +90,16 @@ h1 span{color:var(--accent);display:block}
 .btn{appearance:none;border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;padding:10px 16px;border-radius:10px;cursor:pointer;width:fit-content}
 .btn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .win{color:var(--good);font-weight:700}
+.modes{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;padding:2px;background:var(--surface)}
+.seg button{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button:focus-visible,.modes select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.modes label{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.modes select{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:5px 8px}
+.daily-info{font-size:13px;color:var(--muted)}
+.btn.alt{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.copied{font-size:13px;color:var(--good)}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 .play{appearance:none;border:1.5px solid currentColor;background:transparent;color:inherit;font:inherit;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;cursor:pointer;width:fit-content;margin-top:6px;display:inline-flex;align-items:center;gap:8px}
@@ -119,12 +129,23 @@ h1 span{color:var(--accent);display:block}
     <section class="over" id="over" hidden>
       <h2>Fin de la partida</h2>
       <p id="overText"></p>
+      <button class="btn" id="share" type="button" hidden>Compartir resultado</button>
       <button class="btn" id="again" type="button">Jugar otra vez</button>
+      <span class="copied" id="copied" aria-live="polite"></span>
     </section>
     <div class="scores">
       <div class="score"><b id="streak">0</b><small>Racha</small></div>
       <div class="score"><b id="best">0</b><small>Récord</small></div>
     </div>
+  </div>
+  <div class="modes" id="modes">
+    <div class="seg" role="group" aria-label="Modo de juego">
+      <button type="button" id="modeFree" aria-pressed="true">Partida libre</button>
+      <button type="button" id="modeDaily" aria-pressed="false">Reto diario</button>
+    </div>
+    <label id="decadeWrap">Década <select id="decade"></select></label>
+    <label id="groupWrap">Género <select id="group"></select></label>
+    <span class="daily-info" id="dailyInfo" hidden></span>
   </div>
   <p class="rules">Ordena las canciones por año de lanzamiento, de la más antigua a la más reciente. Un solo fallo y se acaba la partida. Si dos canciones son del mismo año, vale cualquier orden entre ellas.</p>
 
@@ -245,20 +266,85 @@ const SONGS = [
 
 const $ = id => document.getElementById(id);
 const store = {
-  get(){ try{ return +localStorage.getItem("cronologia-best")||0 }catch(e){ return 0 } },
-  set(v){ try{ localStorage.setItem("cronologia-best",String(v)) }catch(e){} }
+  get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
 };
-let deck, placed, current, streak, best = store.get(), over;
+// Familias de géneros para el filtro; cada género de SONGS debe estar en una
+const GENRE_GROUPS = {
+  "Pop": ["Pop","Synth-pop","Tecnopop","Indie pop","New wave","K-pop","Canción del verano"],
+  "Rock": ["Rock","Pop rock","Balada rock","Rumba rock","Folk"],
+  "Latino y reguetón": ["Reguetón","Pop latino","Bachata","Salsa","Merengue","Mambo","Lambada","Sertanejo","Forró","Vallenato pop","Corridos","Electro latino","Electrónica latina","Trap latino","Pop urbano"],
+  "Baile y electrónica": ["Dance","Eurodance","Electrónica","Disco","Italo disco","Funk"],
+  "Baladas y canción": ["Balada","Canción melódica","Cantautor","Canción de autor","Soul"],
+  "Flamenco y rumba": ["Rumba","Pop flamenco","Flamenco pop"],
+  "Hip hop y R&B": ["Rap","Hip hop","R&B"]
+};
+const groupOf = g => Object.keys(GENRE_GROUPS).find(k => GENRE_GROUPS[k].includes(g)) || "Pop";
+const DAILY_SIZE = 15, DAILY_EPOCH = Date.UTC(2026,9,20);
+let deck, placed, current, streak, best = 0, over, marks = [];
+let mode = "free", decade = "all", group = "all";
+
+function todayKey(){ return new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Madrid"}).format(new Date()) }
+function dailyNumber(key){ const [y,m,d]=key.split("-").map(Number); return Math.round((Date.UTC(y,m-1,d)-DAILY_EPOCH)/864e5)+1 }
+function seeded(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296 } }
+function hashStr(str){ let h=2166136261; for(const c of str){ h^=c.codePointAt(0); h=Math.imul(h,16777619) } return h>>>0 }
+function pool(dec=decade, grp=group){ return SONGS.filter(s => (dec==="all" || Math.floor(s.year/10)*10===+dec) && (grp==="all" || groupOf(s.genre)===grp)) }
+function bestKey(){ return "cronologia-best" + (decade==="all" && group==="all" ? "" : ":"+decade+":"+group) }
+function loadBest(){ best = +store.get(bestKey()) || 0 }
+function dailyResult(){ try{ return JSON.parse(store.get("cronologia-daily-"+todayKey())) }catch(e){ return null } }
+
+function fillFilters(){
+  const decSel = $("decade"), grpSel = $("group");
+  const decades = [...new Set(SONGS.map(s=>Math.floor(s.year/10)*10))].sort();
+  decSel.innerHTML = `<option value="all">Todas (${pool("all",group).length})</option>` +
+    decades.map(d=>{ const n=pool(String(d),group).length; return `<option value="${d}" ${n<2?"disabled":""}>Años ${String(d).slice(2)} (${n})</option>` }).join("");
+  grpSel.innerHTML = `<option value="all">Todos (${pool(decade,"all").length})</option>` +
+    Object.keys(GENRE_GROUPS).map(g=>{ const n=pool(decade,g).length; return `<option value="${g}" ${n<2?"disabled":""}>${g} (${n})</option>` }).join("");
+  decSel.value = decade; grpSel.value = group;
+}
+function setMode(m){
+  mode = m;
+  $("modeFree").setAttribute("aria-pressed", m==="free");
+  $("modeDaily").setAttribute("aria-pressed", m==="daily");
+  $("decadeWrap").hidden = $("groupWrap").hidden = m==="daily";
+  $("dailyInfo").hidden = m!=="daily";
+  if(m==="daily") $("dailyInfo").textContent = `Reto nº ${dailyNumber(todayKey())}: las mismas ${DAILY_SIZE} canciones para todos hoy.`;
+  start();
+}
 
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a }
 function ytLink(s){ return "https://www.youtube.com/results?search_query="+encodeURIComponent(s.artist+" "+s.title) }
 
 function start(){
-  deck = shuffle(SONGS.slice());
+  marks = []; $("copied").textContent = "";
+  if(mode==="daily"){
+    const key = todayKey(), rng = seeded(hashStr("cronologia-"+key));
+    const all = SONGS.slice();
+    for(let i=all.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [all[i],all[j]]=[all[j],all[i]] }
+    deck = all.slice(0, DAILY_SIZE+1).reverse();
+    best = 0;
+  } else {
+    deck = shuffle(pool());
+    loadBest();
+  }
   placed = [deck.pop()];
   streak = 0; over = false; $("last").textContent = "";
   $("over").hidden = true; $("now").hidden = false;
+  const done = mode==="daily" && dailyResult();
+  if(done){ showDailyDone(done); return }
   next();
+}
+function showDailyDone(r){
+  over = true; stopAudio(); $("now").hidden = true; $("over").hidden = false;
+  streak = r.score; marks = r.marks;
+  $("over").querySelector("h2").textContent = "Reto de hoy completado";
+  $("overText").textContent = `Hoy has acertado ${r.score} de ${DAILY_SIZE}. Vuelve mañana para un reto nuevo.`;
+  $("share").hidden = false; $("again").textContent = "Jugar partida libre";
+  $("timeline").replaceChildren(); $("streak").textContent = r.score; $("best").textContent = "–";
+}
+function shareText(){
+  const key = todayKey(), [y,m,d] = key.split("-");
+  return `Cronología Musical · Reto nº ${dailyNumber(key)} (${d}/${m}/${y})\n${marks.join("")} ${streak}/${DAILY_SIZE}\n${location.href.split("#")[0]}`;
 }
 // --- Audio: fragmentos de 30 s de Deezer (JSONP), con iTunes como respaldo ---
 const audio = $("audio"), playBtn = $("play");
@@ -333,7 +419,8 @@ function place(i){
   if(fits(i)){
     placed.splice(i,0,current); streak++;
     $("last").textContent = `✓ Correcto: «${current.title}», ${current.artist} (${current.year})`;
-    if(streak>best){ best=streak; store.set(best) }
+    marks.push("🟩");
+    if(mode==="free" && streak>best){ best=streak; store.set(bestKey(), String(best)) }
     render(i);
     next();
   } else {
@@ -364,7 +451,7 @@ function slot(i){
 function render(newIdx, fail){
   const tl = $("timeline"); tl.replaceChildren();
   tl.classList.toggle("done", !!fail || over);
-  $("streak").textContent = streak; $("best").textContent = best;
+  $("streak").textContent = streak; $("best").textContent = mode==="daily" ? "–" : best;
   const top = document.createElement("div"); top.className="edge"; top.textContent="Antigua"; tl.append(top);
   for(let i=0;i<=placed.length;i++){
     if(fail && fail.wrongAt===i){ tl.append(card(current,"wrong")) }
@@ -387,18 +474,39 @@ addEventListener("resize", fitTimeline);
 function finish(fail, won){
   stopAudio();
   over = true; $("now").hidden = true; $("over").hidden = false;
-  if(won){
-    $("over").querySelector("h2").textContent = "¡Has completado el catálogo!";
+  $("share").hidden = mode!=="daily"; $("again").textContent = mode==="daily" ? "Jugar partida libre" : "Jugar otra vez";
+  if(mode==="daily"){
+    if(!won) marks.push("🟥");
+    store.set("cronologia-daily-"+todayKey(), JSON.stringify({score:streak, marks}));
+  }
+  if(won && mode==="daily"){
+    $("over").querySelector("h2").textContent = "¡Reto de hoy superado!";
+    $("overText").innerHTML = `<span class="win">Has acertado las ${DAILY_SIZE} canciones.</span> Vuelve mañana para un reto nuevo.`;
+    render();
+  } else if(won){
+    $("over").querySelector("h2").textContent = "¡Has colocado todas las canciones!";
     $("overText").innerHTML = `<span class="win">Racha perfecta de ${streak} canciones.</span>`;
     render();
   } else {
     $("over").querySelector("h2").textContent = "Fin de la partida";
-    $("overText").textContent = `«${current.title}» de ${current.artist} es de ${current.year}. En rojo, donde la pusiste; con borde verde, su sitio correcto. Racha final: ${streak}.`;
+    $("overText").textContent = `«${current.title}» de ${current.artist} es de ${current.year}. En rojo, donde la pusiste; con borde verde, su sitio correcto. ` + (mode==="daily" ? `Hoy has acertado ${streak} de ${DAILY_SIZE}.` : `Racha final: ${streak}.`);
     render(undefined, fail);
   }
   $("again").focus();
 }
-$("again").addEventListener("click", start);
+$("again").addEventListener("click", ()=>{ if(mode==="daily") setMode("free"); else start() });
+$("share").addEventListener("click", async ()=>{
+  const text = shareText();
+  try{
+    if(navigator.share && matchMedia("(pointer:coarse)").matches){ await navigator.share({text}); return }
+    await navigator.clipboard.writeText(text); $("copied").textContent = "Resultado copiado. Pégalo donde quieras.";
+  }catch(e){ if(e.name!=="AbortError") $("copied").textContent = text }
+});
+$("modeFree").addEventListener("click", ()=>setMode("free"));
+$("modeDaily").addEventListener("click", ()=>setMode("daily"));
+$("decade").addEventListener("change", e=>{ decade = e.target.value; if(pool().length<2) group="all"; fillFilters(); start() });
+$("group").addEventListener("change", e=>{ group = e.target.value; if(pool().length<2) decade="all"; fillFilters(); start() });
+fillFilters();
 start();
 </script>
 </body>

@@ -7,6 +7,7 @@ Juego web: el jugador escucha un fragmento de una canción (sin ver título ni a
 - `index.html`: todo el juego (HTML, CSS y JS en un solo archivo, sin dependencias ni build).
   - `SONGS`: catálogo, `[título, artista, año, género]`.
   - Audio: fragmentos de 30 s buscados en tiempo real en Deezer (JSONP), con iTunes como respaldo y enlace a YouTube si no hay fragmento. El audio solo suena al pulsar el botón y se para al colocar una canción.
+  - Pantallas por dirección (#normal, #reto, #decadas/1980, #generos/pop…): menú, elección de década o género en tarjetas (solo las que tienen `MIN_CARD` = 25 canciones o más) y partida.
   - Modos: partida libre con filtros de década y familia de género (`GENRE_GROUPS`; todo género nuevo debe estar en una familia) y reto diario (`DAILY_SIZE` canciones elegidas con una semilla a partir de la fecha de Madrid; resultado guardado en localStorage).
   - La línea del tiempo se compacta (`compact`, `mini`) para caber en una pantalla.
 - `favicon.svg`: icono de vinilo.

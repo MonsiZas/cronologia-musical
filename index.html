@@ -90,14 +90,25 @@ h1 span{color:var(--accent);display:block}
 .btn{appearance:none;border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;padding:10px 16px;border-radius:10px;cursor:pointer;width:fit-content}
 .btn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .win{color:var(--good);font-weight:700}
-.modes{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
-.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;padding:2px;background:var(--surface)}
-.seg button{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:14px;padding:6px 14px;border-radius:999px;cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
-.seg button:focus-visible,.modes select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.modes label{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
-.modes select{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:5px 8px}
+.screen-head{display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap}
+.back{color:var(--accent);font-weight:700;text-decoration:none;font-size:14px;border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;background:var(--surface)}
+.back:hover,.back:focus-visible{border-color:var(--accent);outline:none}
+.mode-title{font-family:var(--display);font-weight:800;font-stretch:108%;font-size:20px;margin:0}
 .daily-info{font-size:13px;color:var(--muted)}
+.home{display:flex;flex-direction:column;gap:22px;padding-block:3vh 0}
+.home h1{font-size:clamp(40px,8vw,72px)}
+.home .lead{margin:0;color:var(--muted);font-size:16px;max-width:60ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.mcard{position:relative;display:flex;flex-direction:column;gap:6px;min-height:150px;padding:18px 18px 16px;border:1.5px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);text-decoration:none;overflow:hidden;transition:border-color .15s,transform .15s}
+.mcard:hover,.mcard:focus-visible{border-color:var(--accent);transform:translateY(-2px);outline:none}
+.mcard:focus-visible{box-shadow:0 0 0 3px var(--accent)}
+@media (prefers-reduced-motion:reduce){.mcard{transition:none}.mcard:hover{transform:none}}
+.mcard .k{font-family:var(--display);font-weight:900;font-stretch:115%;font-size:26px;line-height:1.05;color:var(--accent)}
+.mcard .d{color:var(--muted);font-size:14px;max-width:34ch}
+.mcard .n{margin-top:auto;font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.mcard::after{content:"";position:absolute;right:-38px;bottom:-38px;width:110px;height:110px;border-radius:50%;opacity:.12;
+  background:radial-gradient(circle,var(--accent) 0 14px,transparent 14px 22px,var(--accent) 22px 23px,transparent 23px 30px,var(--accent) 30px 31px,transparent 31px 38px,var(--accent) 38px 55px)}
+.mcard.big .k{font-size:44px}
 .btn.alt{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
 .copied{font-size:13px;color:var(--good)}
 *{box-sizing:border-box}
@@ -113,8 +124,26 @@ h1 span{color:var(--accent);display:block}
 <body>
 
 <div class="wrap">
-  <div class="top">
+  <section class="home" id="screenMenu">
     <h1>Cronología <span>Musical</span></h1>
+    <p class="lead">Escucha un trozo de cada canción y colócala en la línea del tiempo según su año de lanzamiento. Un solo fallo y se acaba la partida.</p>
+    <nav class="cards" aria-label="Modos de juego">
+      <a class="mcard" href="#normal"><span class="k">Partida normal</span><span class="d">Todas las canciones del catálogo, sin límite. ¿Hasta dónde llega tu racha?</span><span class="n" id="infoNormal"></span></a>
+      <a class="mcard" href="#reto"><span class="k">Reto diario</span><span class="d">Las mismas 15 canciones para todos hoy. Compara tu resultado con tus amigos.</span><span class="n" id="infoDaily"></span></a>
+      <a class="mcard" href="#decadas"><span class="k">Décadas</span><span class="d">Juega solo con canciones de una década: de los 70 a hoy.</span><span class="n" id="infoDecades"></span></a>
+      <a class="mcard" href="#generos"><span class="k">Géneros</span><span class="d">Pop, latino, baile… elige tu estilo y ordena sus éxitos.</span><span class="n" id="infoGenres"></span></a>
+    </nav>
+  </section>
+
+  <section class="home" id="screenPick" hidden>
+    <div class="screen-head"><a class="back" href="#">← Menú</a><h2 class="mode-title" id="pickTitle"></h2></div>
+    <nav class="cards" id="pickCards"></nav>
+  </section>
+
+  <section id="screenGame" hidden style="display:flex;flex-direction:column;gap:14px">
+  <div class="screen-head"><a class="back" id="gameBack" href="#">← Menú</a><h2 class="mode-title" id="gameTitle"></h2><span class="daily-info" id="dailyInfo" hidden></span></div>
+  <div class="top">
+    <h1 class="game-logo">Cronología <span>Musical</span></h1>
     <section class="now" id="now" aria-live="polite">
       <div class="disc" aria-hidden="true"></div>
       <div class="now-text">
@@ -138,18 +167,10 @@ h1 span{color:var(--accent);display:block}
       <div class="score"><b id="best">0</b><small>Récord</small></div>
     </div>
   </div>
-  <div class="modes" id="modes">
-    <div class="seg" role="group" aria-label="Modo de juego">
-      <button type="button" id="modeFree" aria-pressed="true">Partida libre</button>
-      <button type="button" id="modeDaily" aria-pressed="false">Reto diario</button>
-    </div>
-    <label id="decadeWrap">Década <select id="decade"></select></label>
-    <label id="groupWrap">Género <select id="group"></select></label>
-    <span class="daily-info" id="dailyInfo" hidden></span>
-  </div>
   <p class="rules">Ordena las canciones por año de lanzamiento, de la más antigua a la más reciente. Un solo fallo y se acaba la partida. Si dos canciones son del mismo año, vale cualquier orden entre ellas.</p>
 
   <div class="timeline" id="timeline" aria-label="Línea del tiempo"></div>
+  </section>
 </div>
 
 <script>
@@ -293,28 +314,55 @@ function bestKey(){ return "cronologia-best" + (decade==="all" && group==="all" 
 function loadBest(){ best = +store.get(bestKey()) || 0 }
 function dailyResult(){ try{ return JSON.parse(store.get("cronologia-daily-"+todayKey())) }catch(e){ return null } }
 
-function fillFilters(){
-  const decSel = $("decade"), grpSel = $("group");
-  const decades = [...new Set(SONGS.map(s=>Math.floor(s.year/10)*10))].sort();
-  decSel.innerHTML = `<option value="all">Todas (${pool("all",group).length})</option>` +
-    decades.map(d=>{ const n=pool(String(d),group).length; return `<option value="${d}" ${n<2?"disabled":""}>Años ${String(d).slice(2)} (${n})</option>` }).join("");
-  grpSel.innerHTML = `<option value="all">Todos (${pool(decade,"all").length})</option>` +
-    Object.keys(GENRE_GROUPS).map(g=>{ const n=pool(decade,g).length; return `<option value="${g}" ${n<2?"disabled":""}>${g} (${n})</option>` }).join("");
-  decSel.value = decade; grpSel.value = group;
-}
-function setMode(m){
-  mode = m;
-  $("modeFree").setAttribute("aria-pressed", m==="free");
-  $("modeDaily").setAttribute("aria-pressed", m==="daily");
-  $("decadeWrap").hidden = $("groupWrap").hidden = m==="daily";
-  $("dailyInfo").hidden = m!=="daily";
-  if(m==="daily") $("dailyInfo").textContent = `Reto nº ${dailyNumber(todayKey())}: las mismas ${DAILY_SIZE} canciones para todos hoy.`;
-  start();
-}
-
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a }
 function ytLink(s){ return "https://www.youtube.com/results?search_query="+encodeURIComponent(s.artist+" "+s.title) }
+const MIN_CARD = 25;
+const slug = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+const decadeName = d => d>=2000 ? `Años ${d}` : `Años ${String(d).slice(2)}`;
+function decadeList(){ return [...new Set(SONGS.map(s=>Math.floor(s.year/10)*10))].sort().map(d=>({id:String(d), n:pool(String(d),"all").length})).filter(x=>x.n>=MIN_CARD) }
+function groupList(){ return Object.keys(GENRE_GROUPS).map(g=>({id:g, n:pool("all",g).length})).filter(x=>x.n>=MIN_CARD).sort((a,b)=>b.n-a.n) }
+const GROUP_BLURB = {"Pop":"De ABBA a Aitana","Rock":"Guitarras de todas las épocas","Latino y reguetón":"Reguetón, bachata, salsa y pop latino","Baile y electrónica":"Disco, eurodance y electrónica","Baladas y canción":"Baladas, cantautores y canción melódica","Flamenco y rumba":"Rumba y pop flamenco","Hip hop y R&B":"Rap, hip hop y R&B"};
+const DECADE_BLURB = {"1960":"Ye-yé y Eurovisión","1970":"Disco y canción melódica","1980":"Movida y sintetizadores","1990":"Eurodance y pop latino","2000":"Operación Triunfo y canciones del verano","2010":"Reguetón y electrónica","2020":"Lo más escuchado de esta década"};
+function menuCard(href, k, d, n, big){ return `<a class="mcard${big?" big":""}" href="${href}"><span class="k">${k}</span><span class="d">${d||""}</span><span class="n">${n} canciones</span></a>` }
 
+function showScreen(id){ for(const sc of ["screenMenu","screenPick","screenGame"]) $(sc).hidden = sc!==id }
+function renderMenu(){
+  $("infoNormal").textContent = `${SONGS.length} canciones · récord ${+store.get("cronologia-best")||0}`;
+  const r = dailyResult();
+  $("infoDaily").textContent = `Reto nº ${dailyNumber(todayKey())} · ` + (r ? `hoy: ${r.score}/${DAILY_SIZE}` : "sin jugar hoy");
+  $("infoDecades").textContent = `${decadeList().length} décadas`;
+  $("infoGenres").textContent = `${groupList().length} géneros`;
+}
+function route(){
+  stopAudio();
+  const [base, sub] = decodeURIComponent(location.hash.replace(/^#\/?/,"")).split("/");
+  document.title = "Cronología Musical";
+  if(base==="normal"){ mode="free"; decade="all"; group="all"; openGame("Partida normal") }
+  else if(base==="reto"){ mode="daily"; decade="all"; group="all"; openGame(`Reto diario nº ${dailyNumber(todayKey())}`) }
+  else if(base==="decadas" && sub && decadeList().some(x=>x.id===sub)){ mode="free"; decade=sub; group="all"; openGame(decadeName(+sub)) }
+  else if(base==="generos" && sub && groupList().some(x=>slug(x.id)===sub)){ mode="free"; decade="all"; group=groupList().find(x=>slug(x.id)===sub).id; openGame(group) }
+  else if(base==="decadas"){
+    $("pickTitle").textContent = "Elige una década";
+    $("pickCards").innerHTML = decadeList().map(x=>menuCard("#decadas/"+x.id, decadeName(+x.id), DECADE_BLURB[x.id], x.n, true)).join("");
+    showScreen("screenPick"); $("pickCards").querySelector("a")?.focus();
+  }
+  else if(base==="generos"){
+    $("pickTitle").textContent = "Elige un género";
+    $("pickCards").innerHTML = groupList().map(x=>menuCard("#generos/"+slug(x.id), x.id, GROUP_BLURB[x.id], x.n)).join("");
+    showScreen("screenPick"); $("pickCards").querySelector("a")?.focus();
+  }
+  else { renderMenu(); showScreen("screenMenu") }
+}
+function openGame(title){
+  $("gameTitle").textContent = title;
+  $("gameBack").href = decade!=="all" ? "#decadas" : group!=="all" ? "#generos" : "#";
+  $("gameBack").textContent = decade!=="all" ? "← Décadas" : group!=="all" ? "← Géneros" : "← Menú";
+  $("dailyInfo").hidden = mode!=="daily";
+  if(mode==="daily") $("dailyInfo").textContent = `Las mismas ${DAILY_SIZE} canciones para todos hoy.`;
+  document.title = title + " · Cronología Musical";
+  showScreen("screenGame");
+  start();
+}
 function start(){
   marks = []; $("copied").textContent = "";
   if(mode==="daily"){
@@ -339,7 +387,7 @@ function showDailyDone(r){
   streak = r.score; marks = r.marks;
   $("over").querySelector("h2").textContent = "Reto de hoy completado";
   $("overText").textContent = `Hoy has acertado ${r.score} de ${DAILY_SIZE}. Vuelve mañana para un reto nuevo.`;
-  $("share").hidden = false; $("again").textContent = "Jugar partida libre";
+  $("share").hidden = false; $("again").textContent = "Jugar partida normal";
   $("timeline").replaceChildren(); $("streak").textContent = r.score; $("best").textContent = "–";
 }
 function shareText(){
@@ -474,7 +522,7 @@ addEventListener("resize", fitTimeline);
 function finish(fail, won){
   stopAudio();
   over = true; $("now").hidden = true; $("over").hidden = false;
-  $("share").hidden = mode!=="daily"; $("again").textContent = mode==="daily" ? "Jugar partida libre" : "Jugar otra vez";
+  $("share").hidden = mode!=="daily"; $("again").textContent = mode==="daily" ? "Jugar partida normal" : "Jugar otra vez";
   if(mode==="daily"){
     if(!won) marks.push("🟥");
     store.set("cronologia-daily-"+todayKey(), JSON.stringify({score:streak, marks}));
@@ -494,7 +542,7 @@ function finish(fail, won){
   }
   $("again").focus();
 }
-$("again").addEventListener("click", ()=>{ if(mode==="daily") setMode("free"); else start() });
+$("again").addEventListener("click", ()=>{ if(mode==="daily") location.hash = "normal"; else start() });
 $("share").addEventListener("click", async ()=>{
   const text = shareText();
   try{
@@ -502,12 +550,8 @@ $("share").addEventListener("click", async ()=>{
     await navigator.clipboard.writeText(text); $("copied").textContent = "Resultado copiado. Pégalo donde quieras.";
   }catch(e){ if(e.name!=="AbortError") $("copied").textContent = text }
 });
-$("modeFree").addEventListener("click", ()=>setMode("free"));
-$("modeDaily").addEventListener("click", ()=>setMode("daily"));
-$("decade").addEventListener("change", e=>{ decade = e.target.value; if(pool().length<2) group="all"; fillFilters(); start() });
-$("group").addEventListener("change", e=>{ group = e.target.value; if(pool().length<2) decade="all"; fillFilters(); start() });
-fillFilters();
-start();
+addEventListener("hashchange", route);
+route();
 </script>
 </body>
 </html>

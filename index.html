@@ -130,7 +130,7 @@ h1 span{color:var(--accent);display:block}
     <nav class="cards" aria-label="Modos de juego">
       <a class="mcard" href="#normal"><span class="k">Partida normal</span><span class="d">Todas las canciones del catálogo, sin límite. ¿Hasta dónde llega tu racha?</span><span class="n" id="infoNormal"></span></a>
       <a class="mcard" href="#reto"><span class="k">Reto diario</span><span class="d">Las mismas 15 canciones para todos hoy. Compara tu resultado con tus amigos.</span><span class="n" id="infoDaily"></span></a>
-      <a class="mcard" href="#decadas"><span class="k">Décadas</span><span class="d">Juega solo con canciones de una década: de los 70 a hoy.</span><span class="n" id="infoDecades"></span></a>
+      <a class="mcard" href="#decadas"><span class="k">Décadas</span><span class="d">Juega solo con canciones de una década: de los 60 a hoy.</span><span class="n" id="infoDecades"></span></a>
       <a class="mcard" href="#generos"><span class="k">Géneros</span><span class="d">Pop, latino, baile… elige tu estilo y ordena sus éxitos.</span><span class="n" id="infoGenres"></span></a>
     </nav>
   </section>
@@ -204,7 +204,7 @@ const SONGS = [
 ["...Baby One More Time","Britney Spears",1998,"Pop"],["Livin' la Vida Loca","Ricky Martin",1999,"Pop latino"],["Mambo No. 5","Lou Bega",1999,"Mambo"],
 ["Oops!... I Did It Again","Britney Spears",2000,"Pop"],
 ["Can't Get You Out of My Head","Kylie Minogue",2001,"Dance"],["Héroe","Enrique Iglesias",2001,"Balada"],
-["Aserejé","Las Ketchup",2002,"Pop"],["Ave María","David Bisbal",2002,"Pop latino"],
+["Aserejé","Las Ketchup",2002,"Rumba pop"],["Ave María","David Bisbal",2002,"Pop latino"],
 ["Rosas","La Oreja de Van Gogh",2003,"Pop"],["Gasolina","Daddy Yankee",2004,"Reguetón"],
 ["Hips Don't Lie","Shakira ft. Wyclef Jean",2006,"Pop latino"],["Me muero","La 5ª Estación",2006,"Pop rock"],
 ["Umbrella","Rihanna ft. Jay-Z",2007,"R&B"],["Viva la Vida","Coldplay",2008,"Rock"],["Poker Face","Lady Gaga",2008,"Pop"],
@@ -288,6 +288,27 @@ const SONGS = [
 ["Amiga mía","Alejandro Sanz",1997,"Balada"],["Vivo por ella","Andrea Bocelli & Marta Sánchez",1997,"Balada"],
 ["Carolina","M-Clan",1999,"Rock"],["It's My Life","Bon Jovi",2000,"Rock"],["Como Camarón","Estopa",2000,"Rumba rock"],
 ["Bring Me to Life","Evanescence ft. Paul McCoy",2003,"Rock"],["Te he echado de menos","Pablo Alborán",2014,"Balada"],
+["Flamenco","Los Brincos",1964,"Pop rock"],["Tombe la neige","Adamo",1963,"Canción melódica"],
+["Aline","Christophe",1965,"Canción melódica"],["La chica ye-yé","Concha Velasco",1965,"Pop"],
+["Yellow Submarine","The Beatles",1966,"Pop"],
+["Massachusetts","Bee Gees",1967,"Pop"],["San Francisco (Be Sure to Wear Flowers in Your Hair)","Scott McKenzie",1967,"Folk"],["Hablemos del amor","Raphael",1967,"Canción melódica"],
+["Bring a Little Lovin'","Los Bravos",1968,"Pop rock"],["Ob-La-Di, Ob-La-Da","The Beatles",1968,"Pop"],["La vida sigue igual","Julio Iglesias",1968,"Balada"],
+["Corazón contento","Marisol",1968,"Pop"],["Delilah","Tom Jones",1968,"Canción melódica"],
+["Sugar, Sugar","The Archies",1969,"Pop"],["Get Back","The Beatles",1969,"Rock"],
+["Borriquito","Peret",1971,"Rumba"],["Entre dos aguas","Paco de Lucía",1973,"Flamenco"],["Te estoy amando locamente","Las Grecas",1973,"Rumba"],
+["Canta y sé feliz","Peret",1974,"Rumba"],["Me quedo contigo","Los Chunguitos",1980,"Rumba"],["Bamboléo","Gipsy Kings",1987,"Rumba"],
+["Bandido","Azúcar Moreno",1990,"Flamenco pop"],["Sólo se vive una vez","Azúcar Moreno",1991,"Flamenco pop"],["All My Loving","Los Manolos",1991,"Rumba"],
+["Cuando zarpa el amor","Camela",1994,"Rumba"],["No estamos lokos","Ketama",1995,"Flamenco pop"],["La Lola","Café Quijano",1999,"Rumba"],
+["Tu calorro","Estopa",2000,"Rumba rock"],["Lloraré las penas","David Bisbal",2002,"Pop flamenco"],["Búscate un hombre que te quiera","El Arrebato",2004,"Rumba"],
+["Pokito a poko","Chambao",2005,"Pop flamenco"],["Aute Cuture","Rosalía",2019,"Flamenco pop"],
+["U Can't Touch This","MC Hammer",1990,"Rap"],["Ice Ice Baby","Vanilla Ice",1990,"Rap"],["Killing Me Softly","Fugees",1996,"Hip hop"],
+["I'll Be Missing You","Puff Daddy & Faith Evans ft. 112",1997,"Rap"],["Men in Black","Will Smith",1997,"Rap"],
+["It Wasn't Me","Shaggy ft. Rikrok",2000,"Dancehall"],["Survivor","Destiny's Child",2001,"R&B"],
+["Without Me","Eminem",2002,"Rap"],["Lose Yourself","Eminem",2002,"Rap"],["In da Club","50 Cent",2003,"Rap"],
+["Yeah!","Usher ft. Lil Jon & Ludacris",2004,"R&B"],["Temperature","Sean Paul",2005,"Dancehall"],
+["Right Round","Flo Rida",2009,"Rap"],["Love the Way You Lie","Eminem ft. Rihanna",2010,"Rap"],
+["MIA","Bad Bunny ft. Drake",2018,"Trap latino"],["I Like It","Cardi B, Bad Bunny & J Balvin",2018,"Hip hop"],["Adán y Eva","Paulo Londra",2018,"Trap latino"],
+["Mamichula","Trueno, Nicki Nicole & Bizarrap",2020,"Trap latino"],
 ["Si antes te hubiera conocido","Karol G",2024,"Merengue"]
 ].map(([title,artist,year,genre])=>({title,artist,year,genre}));
 
@@ -299,12 +320,12 @@ const store = {
 // Familias de géneros para el filtro; cada género de SONGS debe estar en una
 const GENRE_GROUPS = {
   "Pop": ["Pop","Synth-pop","Tecnopop","Indie pop","New wave","K-pop","Canción del verano"],
-  "Rock": ["Rock","Pop rock","Balada rock","Rumba rock","Folk"],
-  "Latino y reguetón": ["Reguetón","Pop latino","Bachata","Salsa","Merengue","Mambo","Lambada","Sertanejo","Forró","Vallenato pop","Corridos","Electro latino","Electrónica latina","Trap latino","Pop urbano"],
+  "Rock": ["Rock","Pop rock","Balada rock","Folk"],
+  "Latino y reguetón": ["Reguetón","Pop latino","Bachata","Salsa","Merengue","Mambo","Lambada","Sertanejo","Forró","Vallenato pop","Corridos","Electro latino","Electrónica latina"],
   "Baile y electrónica": ["Dance","Eurodance","Electrónica","Disco","Italo disco","Funk"],
   "Baladas y canción": ["Balada","Canción melódica","Cantautor","Canción de autor","Soul"],
-  "Flamenco y rumba": ["Rumba","Pop flamenco","Flamenco pop"],
-  "Hip hop y R&B": ["Rap","Hip hop","R&B"]
+  "Flamenco y rumba": ["Rumba","Rumba pop","Rumba rock","Pop flamenco","Flamenco pop","Flamenco"],
+  "Hip hop y R&B": ["Rap","Hip hop","R&B","Trap latino","Pop urbano","Dancehall"]
 };
 const groupOf = g => Object.keys(GENRE_GROUPS).find(k => GENRE_GROUPS[k].includes(g)) || "Pop";
 const DAILY_SIZE = 15, DAILY_EPOCH = Date.UTC(2026,9,20);
